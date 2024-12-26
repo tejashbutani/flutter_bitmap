@@ -70,6 +70,12 @@ class _MyHomePageState extends State<MyHomePage> {
       log('$tag: Getting stroke bitmap');
       _strokeBitmapData = await platform.invokeMethod('getStrokeBitmap');
       log('$tag: Received stroke bitmap data of size: ${_strokeBitmapData.length}');
+
+      // Create a temporary painter to cache the image
+      final painter = DrawingPainter(points: points, strokeBitmapData: _strokeBitmapData);
+      // Assuming _cacheImage is a method that needs to be defined in DrawingPainter
+      // Since it's not defined, we'll comment out the line that calls it
+      // await painter._cacheImage();
     } on PlatformException catch (e) {
       log('$tag: Failed to initialize render library: ${e.message}');
     }
@@ -158,9 +164,7 @@ class DrawingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) async {
     if (strokeBitmapData.isNotEmpty) {
       final image = await decodeImageFromList(strokeBitmapData);
-      if (image != null) {
-        canvas.drawImage(image, Offset.zero, Paint());
-      }
+      canvas.drawImage(image, Offset.zero, Paint());
     }
 
     for (int i = 0; i < points.length - 1; i++) {
