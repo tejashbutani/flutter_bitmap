@@ -21,42 +21,49 @@ import display.interactive.renderlib.RenderUtils
  * @Date: 2024/11/23
  */
 class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Callback {
+    private val TAG = "RenderLibSurfaceView"
     private var mPaint: Paint? = null
     private var mBitmap: Bitmap? = null
     private var mHolder: SurfaceHolder? = null
     private var mPaintCanvas: Canvas? = null
 
     init {
+        Log.d(TAG, "Initializing RenderLibSurfaceView")
         holder.addCallback(this)
-        // Create bitmap for drawing
         mBitmap = Bitmap.createBitmap(2000, 2000, Bitmap.Config.ARGB_8888)
         
-        // init paint
         mPaint = Paint().apply {
             strokeWidth = 4.0f
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
             isAntiAlias = true
+            color = Color.BLACK
         }
         mPaintCanvas = Canvas(mBitmap!!)
+        Log.d(TAG, "Initialization complete")
     }
 
     fun setColor(color: Int) {
+        Log.d(TAG, "setColor called with color=$color")
         mPaint?.color = color
     }
 
     fun setStrokeWidth(width: Float) {
+        Log.d(TAG, "setStrokeWidth called with width=$width")
         mPaint?.strokeWidth = width
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        Log.d(TAG, "onTouchEvent called with action=${event.action} at (${event.x}, ${event.y})")
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 mPaintCanvas?.drawPoint(event.x, event.y, mPaint!!)
+                Log.d(TAG, "Drawing point at (${event.x}, ${event.y})")
                 invalidate()
             }
             MotionEvent.ACTION_MOVE -> {
                 mPaintCanvas?.drawPoint(event.x, event.y, mPaint!!)
+                Log.d(TAG, "Drawing point at (${event.x}, ${event.y})")
                 invalidate()
             }
         }
@@ -65,18 +72,28 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        mBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+        Log.d(TAG, "onDraw called")
+        mBitmap?.let { 
+            canvas.drawBitmap(it, 0f, 0f, null)
+            Log.d(TAG, "Drew bitmap on canvas")
+        }
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
+        Log.d(TAG, "surfaceCreated called")
         mHolder = holder
         val canvas = mHolder!!.lockCanvas()
         canvas.drawColor(Color.WHITE)
         mBitmap?.eraseColor(Color.WHITE)
         mHolder!!.unlockCanvasAndPost(canvas)
+        Log.d(TAG, "Surface initialized with white background")
     }
 
-    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        Log.d(TAG, "surfaceChanged called with width=$width, height=$height")
+    }
 
-    override fun surfaceDestroyed(holder: SurfaceHolder) {}
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        Log.d(TAG, "surfaceDestroyed called")
+    }
 }

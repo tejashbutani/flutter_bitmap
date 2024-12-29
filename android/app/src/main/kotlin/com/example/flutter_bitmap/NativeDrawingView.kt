@@ -3,11 +3,13 @@ package com.example.flutter_bitmap
 import android.content.Context
 import android.graphics.Color
 import android.text.method.Touch.onTouchEvent
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import io.flutter.plugin.platform.PlatformView
 
 class NativeDrawingView(context: Context) : PlatformView {
+    private val TAG = "NativeDrawingView"
     private val rendLibView: RendLibSurfaceView = RendLibSurfaceView(context)
     private var lastX: Float? = null
     private var lastY: Float? = null
@@ -15,18 +17,19 @@ class NativeDrawingView(context: Context) : PlatformView {
     private var currentStrokeWidth: Float = 3f
 
     override fun getView(): View {
+        Log.d(TAG, "getView called")
         return rendLibView
     }
 
     fun drawPoint(x: Float, y: Float, color: Int, strokeWidth: Float) {
+        Log.d(TAG, "drawPoint called with x=$x, y=$y, color=$color, strokeWidth=$strokeWidth")
         rendLibView.setColor(color)
         rendLibView.setStrokeWidth(strokeWidth)
 
         if (lastX != null && lastY != null) {
-            // Create motion events for both the previous and current points
+            Log.d(TAG, "Drawing line from ($lastX, $lastY) to ($x, $y)")
             val downTime = System.currentTimeMillis()
             
-            // Move to the last point
             val moveEvent = MotionEvent.obtain(
                 downTime, downTime,
                 MotionEvent.ACTION_MOVE,
@@ -36,7 +39,6 @@ class NativeDrawingView(context: Context) : PlatformView {
             rendLibView.onTouchEvent(moveEvent)
             moveEvent.recycle()
 
-            // Draw to the current point
             val moveEvent2 = MotionEvent.obtain(
                 downTime, downTime,
                 MotionEvent.ACTION_MOVE,
@@ -46,7 +48,7 @@ class NativeDrawingView(context: Context) : PlatformView {
             rendLibView.onTouchEvent(moveEvent2)
             moveEvent2.recycle()
         } else {
-            // First point in the stroke
+            Log.d(TAG, "Drawing first point at ($x, $y)")
             val downEvent = MotionEvent.obtain(
                 System.currentTimeMillis(),
                 System.currentTimeMillis(),
@@ -63,12 +65,14 @@ class NativeDrawingView(context: Context) : PlatformView {
     }
 
     fun clear() {
+        Log.d(TAG, "clear called")
         lastX = null
         lastY = null
         rendLibView.surfaceCreated(rendLibView.holder)
     }
 
     override fun dispose() {
+        Log.d(TAG, "dispose called")
         rendLibView.surfaceDestroyed(rendLibView.holder)
     }
 }
