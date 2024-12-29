@@ -28,6 +28,8 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
     private var mPaintCanvas: Canvas? = null
     private var mPath: Path = Path()
     private var isDrawing = false
+    private var lastX: Float? = null
+    private var lastY: Float? = null
 
     init {
         Log.d(TAG, "Initializing RenderLibSurfaceView")
@@ -60,29 +62,25 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
         Log.d(TAG, "onTouchEvent called with action=${event.action} at (${event.x}, ${event.y})")
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                mPath.reset()
-                mPath.moveTo(event.x, event.y)
-                isDrawing = true
+                lastX = event.x
+                lastY = event.y
                 Log.d(TAG, "Pen down at (${event.x}, ${event.y})")
             }
             MotionEvent.ACTION_MOVE -> {
-                if (isDrawing) {
-                    mPath.lineTo(event.x, event.y)
-                    mPaintCanvas?.drawPath(mPath, mPaint!!)
-                    Log.d(TAG, "Drawing line to (${event.x}, ${event.y})")
+                if (lastX != null && lastY != null) {
+                    mPaintCanvas?.drawLine(lastX!!, lastY!!, event.x, event.y, mPaint!!)
+                    Log.d(TAG, "Drawing line from ($lastX, $lastY) to (${event.x}, ${event.y})")
+                    lastX = event.x
+                    lastY = event.y
+                    updateSurface()
                 }
             }
             MotionEvent.ACTION_UP -> {
-                if (isDrawing) {
-                    mPath.lineTo(event.x, event.y)
-                    mPaintCanvas?.drawPath(mPath, mPaint!!)
-                    mPath.reset()
-                    isDrawing = false
-                    Log.d(TAG, "Pen up at (${event.x}, ${event.y})")
-                }
+                lastX = null
+                lastY = null
+                Log.d(TAG, "Pen up at (${event.x}, ${event.y})")
             }
         }
-        updateSurface()
         return true
     }
 
@@ -97,7 +95,6 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
                     }
                 }
                 holder.unlockCanvasAndPost(canvas)
-                Log.d(TAG, "Surface updated")
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating surface: ${e.message}")
             }
