@@ -26,8 +26,8 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
     private var mBitmap: Bitmap? = null
     private var mHolder: SurfaceHolder? = null
     private var mPaintCanvas: Canvas? = null
-    private var lastX: Float? = null
-    private var lastY: Float? = null
+    private var mPath: Path = Path()
+    private var isDrawing = false
 
     init {
         Log.d(TAG, "Initializing RenderLibSurfaceView")
@@ -38,6 +38,7 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
             strokeWidth = 4.0f
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
+            strokeJoin = Paint.Join.ROUND
             isAntiAlias = true
             color = Color.BLACK
         }
@@ -59,23 +60,28 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
         Log.d(TAG, "onTouchEvent called with action=${event.action} at (${event.x}, ${event.y})")
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
-                lastX = event.x
-                lastY = event.y
-                mPaintCanvas?.drawPoint(event.x, event.y, mPaint!!)
-                Log.d(TAG, "Drawing point at (${event.x}, ${event.y})")
+                mPath.reset()
+                mPath.moveTo(event.x, event.y)
+                isDrawing = true
+                Log.d(TAG, "Pen down at (${event.x}, ${event.y})")
             }
             MotionEvent.ACTION_MOVE -> {
-                if (lastX != null && lastY != null) {
-                    mPaintCanvas?.drawLine(lastX!!, lastY!!, event.x, event.y, mPaint!!)
-                    Log.d(TAG, "Drawing line from ($lastX, $lastY) to (${event.x}, ${event.y})")
-                    lastX = event.x
-                    lastY = event.y
+                if (isDrawing) {
+                    mPath.lineTo(event.x, event.y)
+                    mPaintCanvas?.drawPath(mPath, mPaint!!)
+                    Log.d(TAG, "Drawing line to (${event.x}, ${event.y})")
+                }
+            }
+            MotionEvent.ACTION_UP -> {
+                if (isDrawing) {
+                    mPath.lineTo(event.x, event.y)
+                    mPaintCanvas?.drawPath(mPath, mPaint!!)
+                    mPath.reset()
+                    isDrawing = false
+                    Log.d(TAG, "Pen up at (${event.x}, ${event.y})")
                 }
             }
         }
-        // Force a redraw
-        invalidate()
-        // Also update the surface holder
         updateSurface()
         return true
     }
