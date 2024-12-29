@@ -20,117 +20,63 @@ import display.interactive.renderlib.RenderUtils
  * @Author: maoxingwen
  * @Date: 2024/11/23
  */
-class RendLibSurfaceView : SurfaceView, SurfaceHolder.Callback {
-    private var mHolder: SurfaceHolder? = null
-
+class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Callback {
+    private var mPaint: Paint? = null
     private var mBitmap: Bitmap? = null
-
-
-    private var mScreenWidth = 0
-
-    private var mScreenHeight = 0
-
-    /**
-     * Drawing Camvas
-     */
+    private var mHolder: SurfaceHolder? = null
     private var mPaintCanvas: Canvas? = null
 
-
-    private var mPaint: Paint? = null
-
-
-    private var Prex = 0.0f
-    private var Prey = 0.0f
-    private val mPath = Path()
-
-
-    constructor(context: Context) : super(context) {
-        init(context)
-    }
-
-    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
-        init(context)
-    }
-
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    ) {
-        init(context)
-    }
-
-    constructor(
-        context: Context,
-        attrs: AttributeSet?,
-        defStyleAttr: Int,
-        defStyleRes: Int
-    ) : super(context, attrs, defStyleAttr, defStyleRes) {
-        init(context)
-    }
-
-    private fun init(context: Context) {
-        // Library resources need to be loaded before use
-
-        RenderUtils.initRendLib()
-        // getScreenSize
-        val resolution: IntArray = RenderUtils.getDeviceNativeResolution(context)
-        mScreenWidth = resolution[0]
-        mScreenHeight = resolution[1]
-        mBitmap = RenderUtils.getAccelerateBitmap(3840, 2160)
-
+    init {
         holder.addCallback(this)
-
-
-        mPath.moveTo(0f, 100f)
-
-
+        // Create bitmap for drawing
+        mBitmap = Bitmap.createBitmap(2000, 2000, Bitmap.Config.ARGB_8888)
+        
         // init paint
-        mPaint = Paint()
-        mPaint!!.color = Color.RED
-        mPaint!!.strokeWidth = 4.0f
-        mPaint!!.style = Paint.Style.STROKE
-        mPaint!!.strokeCap = Paint.Cap.ROUND
-        mPaint!!.isAntiAlias = true
-        mPaintCanvas = Canvas()
-        mPaintCanvas!!.setBitmap(mBitmap)
-    }
-
-    override fun surfaceCreated(surfaceHolder: SurfaceHolder) {
-        if (surfaceHolder != null) {
-            mHolder = surfaceHolder
-            val canvas = mHolder!!.lockCanvas()
-            // Set the background of the acceleration bitmap to transparent
-            canvas.drawColor(Color.WHITE)
-            mHolder!!.setFormat(PixelFormat.TRANSPARENT)
-            mHolder!!.unlockCanvasAndPost(canvas)
-        } else {
-            Log.w("TestMXW", "surfaceHolder is nulll !!!")
+        mPaint = Paint().apply {
+            strokeWidth = 4.0f
+            style = Paint.Style.STROKE
+            strokeCap = Paint.Cap.ROUND
+            isAntiAlias = true
         }
+        mPaintCanvas = Canvas(mBitmap!!)
     }
 
-    override fun surfaceChanged(surfaceHolder: SurfaceHolder, i: Int, i1: Int, i2: Int) {
+    fun setColor(color: Int) {
+        mPaint?.color = color
     }
 
-    override fun surfaceDestroyed(surfaceHolder: SurfaceHolder) {
-        RenderUtils.clearBitmapContent()
+    fun setStrokeWidth(width: Float) {
+        mPaint?.strokeWidth = width
     }
-
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (MotionEvent.ACTION_DOWN == event.action) {
-            Prex = event.x
-            Prey = event.y
-            mPath.moveTo(event.x, event.y)
-            mPaintCanvas!!.drawPoint(Prex, Prey, mPaint!!)
-        } else if (MotionEvent.ACTION_UP == event.action) {
-            mPaintCanvas!!.drawPoint(event.x, event.y, mPaint!!)
-        } else if (MotionEvent.ACTION_MOVE == event.action) {
-            mPath.quadTo(Prex, Prey, event.x, event.y)
-            Prex = event.x
-            Prey = event.y
-            mPaintCanvas!!.drawPath(mPath, mPaint!!)
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                mPaintCanvas?.drawPoint(event.x, event.y, mPaint!!)
+                invalidate()
+            }
+            MotionEvent.ACTION_MOVE -> {
+                mPaintCanvas?.drawPoint(event.x, event.y, mPaint!!)
+                invalidate()
+            }
         }
         return true
     }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        mBitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        mHolder = holder
+        val canvas = mHolder!!.lockCanvas()
+        canvas.drawColor(Color.WHITE)
+        mBitmap?.eraseColor(Color.WHITE)
+        mHolder!!.unlockCanvasAndPost(canvas)
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {}
 }

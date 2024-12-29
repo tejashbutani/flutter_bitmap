@@ -19,8 +19,8 @@ class NativeDrawingView(context: Context) : PlatformView {
     }
 
     fun drawPoint(x: Float, y: Float, color: Int, strokeWidth: Float) {
-        currentColor = color
-        currentStrokeWidth = strokeWidth
+        rendLibView.setColor(color)
+        rendLibView.setStrokeWidth(strokeWidth)
 
         if (lastX != null && lastY != null) {
             // Create motion events for both the previous and current points
