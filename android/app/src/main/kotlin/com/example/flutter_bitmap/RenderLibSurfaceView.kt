@@ -26,6 +26,8 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
     private var mBitmap: Bitmap? = null
     private var mHolder: SurfaceHolder? = null
     private var mPaintCanvas: Canvas? = null
+    private var lastX: Float? = null
+    private var lastY: Float? = null
 
     init {
         Log.d(TAG, "Initializing RenderLibSurfaceView")
@@ -57,17 +59,43 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
         Log.d(TAG, "onTouchEvent called with action=${event.action} at (${event.x}, ${event.y})")
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                lastX = event.x
+                lastY = event.y
                 mPaintCanvas?.drawPoint(event.x, event.y, mPaint!!)
                 Log.d(TAG, "Drawing point at (${event.x}, ${event.y})")
-                invalidate()
             }
             MotionEvent.ACTION_MOVE -> {
-                mPaintCanvas?.drawPoint(event.x, event.y, mPaint!!)
-                Log.d(TAG, "Drawing point at (${event.x}, ${event.y})")
-                invalidate()
+                if (lastX != null && lastY != null) {
+                    mPaintCanvas?.drawLine(lastX!!, lastY!!, event.x, event.y, mPaint!!)
+                    Log.d(TAG, "Drawing line from ($lastX, $lastY) to (${event.x}, ${event.y})")
+                    lastX = event.x
+                    lastY = event.y
+                }
             }
         }
+        // Force a redraw
+        invalidate()
+        // Also update the surface holder
+        updateSurface()
         return true
+    }
+
+    private fun updateSurface() {
+        mHolder?.let { holder ->
+            try {
+                val canvas = holder.lockCanvas()
+                synchronized(holder) {
+                    canvas.drawColor(Color.WHITE)
+                    mBitmap?.let {
+                        canvas.drawBitmap(it, 0f, 0f, null)
+                    }
+                }
+                holder.unlockCanvasAndPost(canvas)
+                Log.d(TAG, "Surface updated")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error updating surface: ${e.message}")
+            }
+        }
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -82,10 +110,7 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
     override fun surfaceCreated(holder: SurfaceHolder) {
         Log.d(TAG, "surfaceCreated called")
         mHolder = holder
-        val canvas = mHolder!!.lockCanvas()
-        canvas.drawColor(Color.WHITE)
-        mBitmap?.eraseColor(Color.WHITE)
-        mHolder!!.unlockCanvasAndPost(canvas)
+        updateSurface()
         Log.d(TAG, "Surface initialized with white background")
     }
 
