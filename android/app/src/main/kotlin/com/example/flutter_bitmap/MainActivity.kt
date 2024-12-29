@@ -23,6 +23,7 @@ class MainActivity: FlutterActivity() {
                         val points = call.argument<List<Map<String, Double>>>("points")
                         val color = (call.argument<Number>("color")?.toLong() ?: Color.BLACK.toLong()).toInt()
                         val strokeWidth = call.argument<Double>("strokeWidth")?.toFloat() ?: 3f
+                        val isEndStroke = call.argument<Boolean>("isEndStroke") ?: false
                         
                         points?.forEach { point ->
                             drawingView?.drawPoint(
@@ -32,6 +33,11 @@ class MainActivity: FlutterActivity() {
                                 strokeWidth
                             )
                         }
+                        
+                        if (isEndStroke) {
+                            drawingView?.endStroke()
+                        }
+                        
                         result.success(null)
                     }
                     "clear" -> {

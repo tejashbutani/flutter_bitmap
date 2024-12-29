@@ -11,7 +11,7 @@ class NativeDrawingView extends StatefulWidget {
 class _NativeDrawingViewState extends State<NativeDrawingView> {
   static const MethodChannel _channel = MethodChannel('drawing_channel');
 
-  Future<void> _handleDrawPoint(Offset point, Color color, double strokeWidth) async {
+  Future<void> _handleDrawPoint(Offset point, Color color, double strokeWidth, {bool isEndStroke = false}) async {
     try {
       await _channel.invokeMethod('drawStroke', {
         'points': [
@@ -19,6 +19,7 @@ class _NativeDrawingViewState extends State<NativeDrawingView> {
         ],
         'color': (color.value & 0xFFFFFFFF).toInt(),
         'strokeWidth': strokeWidth,
+        'isEndStroke': isEndStroke,
       });
     } catch (e) {
       debugPrint('Error sending point to native: $e');

@@ -13,42 +13,19 @@ class NativeDrawingView(context: Context) : PlatformView {
     private val rendLibView: RendLibSurfaceView = RendLibSurfaceView(context)
     private var lastX: Float? = null
     private var lastY: Float? = null
-    private var currentColor: Int = Color.BLACK
-    private var currentStrokeWidth: Float = 3f
+    private var isDrawing = false
 
     override fun getView(): View {
-        Log.d(TAG, "getView called")
         return rendLibView
     }
 
     fun drawPoint(x: Float, y: Float, color: Int, strokeWidth: Float) {
-        Log.d(TAG, "drawPoint called with x=$x, y=$y, color=$color, strokeWidth=$strokeWidth")
         rendLibView.setColor(color)
         rendLibView.setStrokeWidth(strokeWidth)
 
-        if (lastX != null && lastY != null) {
-            Log.d(TAG, "Drawing line from ($lastX, $lastY) to ($x, $y)")
-            val downTime = System.currentTimeMillis()
-            
-            val moveEvent = MotionEvent.obtain(
-                downTime, downTime,
-                MotionEvent.ACTION_MOVE,
-                lastX!!, lastY!!,
-                0
-            )
-            rendLibView.onTouchEvent(moveEvent)
-            moveEvent.recycle()
-
-            val moveEvent2 = MotionEvent.obtain(
-                downTime, downTime,
-                MotionEvent.ACTION_MOVE,
-                x, y,
-                0
-            )
-            rendLibView.onTouchEvent(moveEvent2)
-            moveEvent2.recycle()
-        } else {
-            Log.d(TAG, "Drawing first point at ($x, $y)")
+        if (!isDrawing) {
+            // First point - send ACTION_DOWN
+            Log.d(TAG, "Starting new stroke at ($x, $y)")
             val downEvent = MotionEvent.obtain(
                 System.currentTimeMillis(),
                 System.currentTimeMillis(),
@@ -58,16 +35,46 @@ class NativeDrawingView(context: Context) : PlatformView {
             )
             rendLibView.onTouchEvent(downEvent)
             downEvent.recycle()
+            isDrawing = true
+        } else {
+            // Continuing stroke - send ACTION_MOVE
+            Log.d(TAG, "Continuing stroke to ($x, $y)")
+            val moveEvent = MotionEvent.obtain(
+                System.currentTimeMillis(),
+                System.currentTimeMillis(),
+                MotionEvent.ACTION_MOVE,
+                x, y,
+                0
+            )
+            rendLibView.onTouchEvent(moveEvent)
+            moveEvent.recycle()
         }
 
         lastX = x
         lastY = y
     }
 
+    fun endStroke() {
+        if (isDrawing && lastX != null && lastY != null) {
+            Log.d(TAG, "Ending stroke at ($lastX, $lastY)")
+            val upEvent = MotionEvent.obtain(
+                System.currentTimeMillis(),
+                System.currentTimeMillis(),
+                MotionEvent.ACTION_UP,
+                lastX!!, lastY!!,
+                0
+            )
+            rendLibView.onTouchEvent(upEvent)
+            upEvent.recycle()
+            isDrawing = false
+        }
+    }
+
     fun clear() {
         Log.d(TAG, "clear called")
         lastX = null
         lastY = null
+        isDrawing = false
         rendLibView.surfaceCreated(rendLibView.holder)
     }
 
