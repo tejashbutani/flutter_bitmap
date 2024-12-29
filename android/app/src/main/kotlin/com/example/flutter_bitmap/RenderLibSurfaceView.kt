@@ -32,7 +32,7 @@ class RendLibSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder
     init {
         Log.d(TAG, "Initializing RenderLibSurfaceView")
         holder.addCallback(this)
-        mBitmap = Bitmap.createBitmap(2000, 2000, Bitmap.Config.ARGB_8888)
+        mBitmap = Bitmap.createBitmap(3840, 2160, Bitmap.Config.ARGB_8888)
         
         mPaint = Paint().apply {
             strokeWidth = 4.0f
