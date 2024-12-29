@@ -21,7 +21,7 @@ class MainActivity: FlutterActivity() {
                 when (call.method) {
                     "drawStroke" -> {
                         val points = call.argument<List<Map<String, Double>>>("points")
-                        val color = call.argument<Int>("color") ?: Color.BLACK
+                        val color = call.argument<Number>("color")?.toInt() ?: Color.BLACK
                         val strokeWidth = call.argument<Double>("strokeWidth")?.toFloat() ?: 3f
                         
                         points?.forEach { point ->
