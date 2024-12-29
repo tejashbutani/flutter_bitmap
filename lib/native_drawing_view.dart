@@ -17,7 +17,7 @@ class _NativeDrawingViewState extends State<NativeDrawingView> {
         'points': [
           {'x': point.dx, 'y': point.dy}
         ],
-        'color': color.value,
+        'color': (color.value & 0xFFFFFFFF).toInt(),
         'strokeWidth': strokeWidth,
       });
     } catch (e) {
